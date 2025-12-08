@@ -1,4 +1,4 @@
-name: DotNet CI/CD Pipeline
+name: my first CI/CD Pipeline
 
 on:
   push:
