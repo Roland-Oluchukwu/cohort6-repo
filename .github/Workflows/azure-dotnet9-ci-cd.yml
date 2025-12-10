@@ -1,0 +1,39 @@
+name: CI/CD - Build and Deploy .NET 9 to Azure Web App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore ./dotnet-webapp
+
+      - name: Build
+        run: dotnet build ./dotnet-webapp -c Release --no-restore
+
+      - name: Publish
+        run: dotnet publish ./dotnet-webapp -c Release -o publish --no-build
+
+      - name: Archive publish folder
+        run: |
+          cd publish
+          zip -r ../publish.zip * || true
+
+      - name: Deploy to Azure Web App (using publish profile)
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: publish.zip
